@@ -1,0 +1,15 @@
+# Core image / array handling (used by every script)
+numpy
+pillow
+scipy
+
+# Classical CV used by the masking + exploratory tracing scripts
+scikit-image
+opencv-python-headless
+
+# Depth model — the step that actually isolates the top fibers.
+# On Windows, `pip install torch` pulls the CPU wheel automatically (~200 MB);
+# no CUDA build needed for the ThinkPad. For GPU at home, install the CUDA
+# build from https://pytorch.org instead.
+torch
+transformers
