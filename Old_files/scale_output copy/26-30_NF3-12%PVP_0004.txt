@@ -1,0 +1,7 @@
+26-30_NF3-12%PVP_0004.tif  10000x -> 2.48 nm/px, 12.7 um FOV, 1 um scale bar sanity check
+  microscope:    JEOL JSM-IT500HR
+  image size:    5120 x 4096 px
+  pixel size:    2.4805 nm/px (0.00248 um/px)
+  field of view: 12.700 um wide
+  reference:     JEOL 127.0 mm polaroid
+  acquisition:   Mag=10000x, AccV=5.0, Format=JEOL/MP, Detector=SED, WD=18.3, PC=35.0, Vac=HV, SRT=0, Time=80, Gun=FE

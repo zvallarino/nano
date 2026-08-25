@@ -1,0 +1,69 @@
+# ---- virtual environment (never commit; it's machine-specific + huge) ----
+.venv/
+venv/
+env/
+ENV/
+ 
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+ 
+# ---- SEM source images (large TIFFs — keep out of git) ----
+pictures/
+*.tif
+*.tiff
+ 
+# ---- generated outputs (all reproducible from the scripts) ----
+output/
+old_fils/
+ 
+# these are the output subfolders, listed explicitly in case `output/`
+# is ever un-ignored
+output/scale_output/
+output/mask_output/
+output/depth_output/
+output/diameter_output/
+ 
+# ---- generated images / data ----
+*_blackmask.png
+*_topdepth.png
+*_topdepth_depth.png
+*_diameter.png
+*_cutpreview.png
+*_traced.png
+*_layers*.png
+*_diameters.csv
+ALL_diameters.csv
+ 
+# ---- model weights / caches (should live in ~/.cache, but just in case) ----
+*.pt
+*.pth
+*.safetensors
+*.onnx
+.cache/
+hf_cache/
+ 
+# ---- editors / OS ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+ 
+# ---- secrets ----
+.env
+*.token
+hf_token*
