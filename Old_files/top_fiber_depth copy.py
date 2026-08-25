@@ -95,12 +95,7 @@ def main():
                    help="keep the nearest this %% of depth (default 20)")
     p.add_argument("--min-blob", type=int, default=MIN_BLOB)
     p.add_argument("--invert", action="store_true", default=INVERT_DEPTH)
-    p.add_argument("--save-depth", action="store_true",
-                   help="(deprecated) the depth map is always saved now")
-    p.add_argument("--overlay", action="store_true",
-                   help="also save the green nearest-%% overlay. Off by default: "
-                        "it uses a cruder selection than fiber_diameter.py and can "
-                        "highlight different fibers than the ones measured.")
+    p.add_argument("--save-depth", action="store_true")
     p.add_argument("--threads", type=int, default=12,
                    help="CPU threads for torch (default 12; you have 12 physical cores)")
     p.add_argument("--ext", default=".tif,.tiff,.png,.jpg,.jpeg",
@@ -120,8 +115,7 @@ def main():
     if os.path.isdir(args.input):
         exts = tuple(e.strip().lower() for e in args.ext.split(","))
         files = [os.path.join(args.input, f) for f in sorted(os.listdir(args.input))
-                 if f.lower().endswith(exts)
-                 and not f.lower().endswith(("_depth.png", "_topdepth.png"))]
+                 if f.lower().endswith(exts)]
         if not files:
             sys.exit(f"no images ({args.ext}) in {args.input}")
         print(f"batch: {len(files)} images, model={args.model} "
@@ -159,6 +153,27 @@ def process_one(in_path, out_path, args):
     if args.invert:
         depth = -depth
 
+    mask = fiber_mask(rgb)
+    vals = depth[mask]
+    if vals.size == 0:
+        raise RuntimeError("no fiber pixels found (check the red mask thresholds)")
+
+    cutoff = np.percentile(vals, 100 - args.nearest)   # nearest N% of depth
+    top = mask & (depth >= cutoff)
+
+    # drop small speckle
+    try:
+        from scipy import ndimage
+        lbl, n = ndimage.label(top)
+        sizes = ndimage.sum(np.ones_like(lbl), lbl, range(1, n + 1))
+        top = np.isin(lbl, [i + 1 for i, s in enumerate(sizes) if s >= args.min_blob])
+    except ImportError:
+        pass
+
+    out = rgb.copy()
+    out[top] = (OVERLAY_ALPHA * np.array(HIGHLIGHT_COLOR)
+                + (1 - OVERLAY_ALPHA) * out[top]).astype(np.uint8)
+
     if out_path is None:
         stem = os.path.splitext(os.path.basename(in_path))[0]
         outp = os.path.join(DEFAULT_OUTPUT_DIR, f"{stem}_topdepth.png")
@@ -167,34 +182,15 @@ def process_one(in_path, out_path, args):
     od = os.path.dirname(outp)
     if od:
         os.makedirs(od, exist_ok=True)
+    Image.fromarray(out).save(outp)
+    print(f"   overlay -> {outp}")
 
-    # the depth map is the real product — always written
-    dnorm = depth - depth.min()
-    dnorm = (dnorm / (dnorm.max() + 1e-9) * 255).astype(np.uint8)
-    dp = outp.replace(".png", "_depth.png")
-    Image.fromarray(dnorm).save(dp)
-    print(f"   depth   -> {dp}")
-
-    # optional green overlay (cruder selection; off by default)
-    if args.overlay:
-        mask = fiber_mask(rgb)
-        vals = depth[mask]
-        if vals.size == 0:
-            raise RuntimeError("no fiber pixels found (check the red mask thresholds)")
-        cutoff = np.percentile(vals, 100 - args.nearest)
-        top = mask & (depth >= cutoff)
-        try:
-            from scipy import ndimage
-            lbl, n = ndimage.label(top)
-            sizes = ndimage.sum(np.ones_like(lbl), lbl, range(1, n + 1))
-            top = np.isin(lbl, [i + 1 for i, s in enumerate(sizes) if s >= args.min_blob])
-        except ImportError:
-            pass
-        out = rgb.copy()
-        out[top] = (OVERLAY_ALPHA * np.array(HIGHLIGHT_COLOR)
-                    + (1 - OVERLAY_ALPHA) * out[top]).astype(np.uint8)
-        Image.fromarray(out).save(outp)
-        print(f"   overlay -> {outp}")
+    if args.save_depth:
+        d = depth - depth.min()
+        d = (d / (d.max() + 1e-9) * 255).astype(np.uint8)
+        dp = outp.replace(".png", "_depth.png")
+        Image.fromarray(d).save(dp)
+        print(f"   depth   -> {dp}")
 
 
 if __name__ == "__main__":

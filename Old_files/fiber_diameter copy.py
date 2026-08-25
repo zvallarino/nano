@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 fiber_diameter.py — measure the diameter of the fiber(s) closest to the viewer.
 
@@ -174,11 +173,6 @@ def main():
 
     if not os.path.exists(args.depth):
         sys.exit(f"error: not found: {args.depth}")
-
-    if not args.depth.lower().endswith("_depth.png"):
-        print("WARNING: expected the '..._topdepth_depth.png' (grayscale depth map).\n"
-              "         '..._topdepth.png' is the green overlay and will NOT measure\n"
-              "         correctly. Continuing anyway.\n")
 
     depth_full = load_gray(args.depth)
     d = max(1, args.downscale)
